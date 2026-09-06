@@ -2,15 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { loadDashboard } from "@/lib/domain/curriculum/dashboard";
 import { getSubject } from "@/lib/domain/curriculum/queries";
-import { createClient } from "@/lib/supabase/server";
-
-type PaperRow = {
-  id: string;
-  title: string;
-  assessment_type: "past_paper" | "timed_exam";
-  source: string | null;
-  token_reward_on_completion: number;
-};
+import { listPapers } from "@/lib/domain/assessments/queries";
 
 export default async function PapersPage({
   params,
@@ -24,30 +16,25 @@ export default async function PapersPage({
   const { profile } = await loadDashboard();
   const isTeacher = profile.role === "teacher";
 
-  const supabase = await createClient();
-  const { data: papers } = await supabase
-    .from("assessments")
-    .select("id, title, assessment_type, source, token_reward_on_completion")
-    .eq("subject_id", subjectId)
-    .order("created_at", { ascending: false })
-    .returns<PaperRow[]>();
+  const all = await listPapers(subjectId);
+  const papers = isTeacher ? all : all.filter((p) => p.published);
 
-  if (!papers || papers.length === 0) {
+  if (papers.length === 0) {
     return (
       <div className="card">
         <div className="subject-empty">
           <i className="bi bi-file-earmark-text" />
           <p className="m-0" style={{ fontWeight: 700, color: "var(--text-main)" }}>
-            No papers yet
+            No exams or papers yet
           </p>
           <p className="m-0">
             {isTeacher
-              ? "Add a past paper or a timed exam for students to attempt online."
-              : "No online papers have been set for this subject yet."}
+              ? "Build an exam or a revision paper for students to attempt online."
+              : "Nothing has been set for this subject yet."}
           </p>
           {isTeacher && (
             <Link href={`/subjects/${subjectId}/manage`} className="btn-custom btn-custom-primary btn-custom-sm mt-2">
-              <i className="bi bi-plus-lg" /> Add a paper
+              <i className="bi bi-plus-lg" /> Build one
             </Link>
           )}
         </div>
@@ -62,7 +49,8 @@ export default async function PapersPage({
           <thead>
             <tr>
               <th>Paper</th>
-              <th>Type</th>
+              <th>Kind</th>
+              <th>Time</th>
               <th>Reward</th>
               <th />
             </tr>
@@ -71,19 +59,25 @@ export default async function PapersPage({
             {papers.map((p) => (
               <tr key={p.id}>
                 <td>
-                  <div className="table-user-name">{p.title}</div>
+                  <div className="table-user-name">
+                    {p.title}
+                    {isTeacher && !p.published && <span className="badge-table pending ms-2">Draft</span>}
+                  </div>
                   {p.source && <div className="table-user-sub">{p.source}</div>}
                 </td>
-                <td className="table-user-sub">
-                  {p.assessment_type === "past_paper" ? "Past paper" : "Timed exam"}
-                </td>
+                <td className="table-user-sub">{p.kind === "exam" ? "Exam" : "Revision paper"}</td>
+                <td className="table-user-sub">{p.duration_minutes ? `${p.duration_minutes} min` : "Untimed"}</td>
                 <td className="table-amount">+{p.token_reward_on_completion} 🪙</td>
                 <td style={{ textAlign: "right" }}>
                   <Link
-                    href={`/subjects/${subjectId}/papers/${p.id}`}
+                    href={
+                      isTeacher
+                        ? `/subjects/${subjectId}/manage/papers/${p.id}`
+                        : `/subjects/${subjectId}/papers/${p.id}`
+                    }
                     className="btn-custom btn-custom-light btn-custom-sm"
                   >
-                    Attempt
+                    {isTeacher ? "Edit" : "Open"}
                   </Link>
                 </td>
               </tr>

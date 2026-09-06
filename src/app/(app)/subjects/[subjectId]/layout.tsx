@@ -9,7 +9,7 @@ const SECTION_META: Record<string, { label: string; icon: string; path: string }
   overview: { label: "Overview", icon: "bi-grid-1x2", path: "" },
   topics: { label: "Topics", icon: "bi-journal-text", path: "/topics" },
   resources: { label: "Resources", icon: "bi-folder2-open", path: "/resources" },
-  papers: { label: "Papers", icon: "bi-file-earmark-text", path: "/papers" },
+  papers: { label: "Exams & Papers", icon: "bi-file-earmark-text", path: "/papers" },
   quizzes: { label: "Quizzes", icon: "bi-controller", path: "/quizzes" },
 };
 
