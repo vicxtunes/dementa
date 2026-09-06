@@ -208,7 +208,9 @@ export function Navbar({
             <i className="bi bi-gear" /> Settings
           </span>
           <hr className="dropdown-divider" />
-          <form action={signOut}>
+          {/* stopPropagation so the dropdown's auto-close onClick doesn't unmount
+              this form before React dispatches the server action. */}
+          <form action={signOut} onClick={(e) => e.stopPropagation()}>
             <button className="dropdown-item text-danger w-100 border-0 bg-transparent text-start" type="submit">
               <i className="bi bi-box-arrow-right" /> Sign out
             </button>

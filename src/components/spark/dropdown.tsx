@@ -106,7 +106,9 @@ export function Dropdown({
             right: align === "end" ? 0 : "auto",
           }}
           onClick={() => {
-            if (autoClose === true) setOpen(false);
+            // Defer so a click that also submits a form / fires a server action
+            // (e.g. Sign out) isn't cut short by this menu unmounting first.
+            if (autoClose === true) setTimeout(() => setOpen(false), 0);
           }}
         >
           {children}

@@ -64,6 +64,12 @@ export async function signIn(_prevState: AuthState, formData: FormData): Promise
 
 export async function signOut() {
   const supabase = await createClient();
-  await supabase.auth.signOut();
+  // `local` scope clears this session's cookies without a network round-trip to
+  // revoke other devices — more reliable, and it's all we need here.
+  try {
+    await supabase.auth.signOut({ scope: "local" });
+  } catch {
+    // cookies are cleared by the client above regardless of the API result
+  }
   redirect("/login");
 }
