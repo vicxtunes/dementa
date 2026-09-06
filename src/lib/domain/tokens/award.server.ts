@@ -89,3 +89,42 @@ export async function grantByTeacher(opts: {
   const admin = createAdminClient();
   return delta(admin, opts.studentId, opts.amount, "teacher_grant", opts.note ?? null, false);
 }
+
+/**
+ * Credits the completion reward for an exam / paper, once per paper regardless
+ * of how many revision retakes the student does (dedup key = assessmentId).
+ */
+export async function awardAssessmentCompletion(opts: {
+  userId: string;
+  assessmentId: string;
+  amount: number;
+}): Promise<{ awarded: number; balance: number | null }> {
+  if (!tokensEnabled() || opts.amount <= 0) return { awarded: 0, balance: null };
+  const admin = createAdminClient();
+
+  const { data: existing } = await admin
+    .from("token_transactions")
+    .select("id")
+    .eq("user_id", opts.userId)
+    .eq("reason", "assessment_completed")
+    .eq("reference_id", opts.assessmentId)
+    .maybeSingle();
+  if (existing) {
+    const { data } = await admin
+      .from("profiles")
+      .select("token_balance")
+      .eq("id", opts.userId)
+      .single<{ token_balance: number }>();
+    return { awarded: 0, balance: data?.token_balance ?? null };
+  }
+
+  const balance = await delta(
+    admin,
+    opts.userId,
+    opts.amount,
+    "assessment_completed",
+    opts.assessmentId,
+    true
+  );
+  return { awarded: balance == null ? 0 : opts.amount, balance };
+}

@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "generate-seed": "tsx scripts/generate-seed.mts"
+    "generate-seed": "tsx scripts/generate-seed.mts",
+    "seed:sample-exam": "tsx scripts/seed-sample-exam.mts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.6",
