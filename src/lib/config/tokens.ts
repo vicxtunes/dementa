@@ -42,7 +42,7 @@ export type TokenReason =
 
 export const TOKEN_REASON_LABELS: Record<TokenReason, string> = {
   topic_mastered: "Topic mastered",
-  assessment_completed: "Paper completed",
+  assessment_completed: "Exam / paper completed",
   streak_bonus: "Streak bonus",
   teacher_grant: "Teacher grant",
   duel_entry: "Duel stake",
