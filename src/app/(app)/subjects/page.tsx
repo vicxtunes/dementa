@@ -23,7 +23,8 @@ export default async function SubjectsPage() {
                 subject={subject}
                 mastered={s.masteredCount}
                 total={s.total}
-                ctaLabel={s.masteredCount > 0 ? "Continue" : "Open subject"}
+                started={s.startedCount}
+                ctaLabel={s.startedCount > 0 ? "Continue" : "Open subject"}
               />
             </div>
           );

@@ -8,10 +8,12 @@ export function DuelCreate({
   subjectId,
   topics,
   classmates,
+  tokenBalance = 0,
 }: {
   subjectId: string;
   topics: { id: string; title: string }[];
   classmates: { id: string; full_name: string | null }[];
+  tokenBalance?: number;
 }) {
   const router = useRouter();
   const [opponent, setOpponent] = useState("");
@@ -28,6 +30,9 @@ export function DuelCreate({
   function create() {
     setError(null);
     if (!opponent) return setError("Pick an opponent.");
+    if (stake > tokenBalance) {
+      return setError(`That stake is ${stake} 🪙 but you only have ${tokenBalance}. Lower it or set it to 0.`);
+    }
     if (picked.length === 0) return setError("Pick at least one topic.");
     startTransition(async () => {
       const res = await fetch("/api/matches", {
@@ -115,10 +120,12 @@ export function DuelCreate({
             id="stk"
             type="number"
             min={0}
+            max={tokenBalance}
             className="form-control-custom form-control-custom-sm"
             value={stake}
             onChange={(e) => setStake(Number(e.target.value))}
           />
+          <span className="item-sub">You have {tokenBalance} 🪙 · 0 = free</span>
         </div>
       </div>
 

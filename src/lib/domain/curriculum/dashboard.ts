@@ -1,14 +1,14 @@
 import { cache } from "react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { TOKEN_RULES } from "@/lib/config/tokens";
+import { quizPassed } from "@/lib/config/tokens";
 import { SUBJECT_DEFINITIONS, getSubjectDefinition, ALL_TOPICS } from "@/lib/subjects";
 import type { SubjectDefinition } from "@/lib/subjects";
 import type { Profile, ProgressRow, QuizAttemptRow } from "./types";
 import type { ActivityItem } from "@/components/spark/navbar";
 
-const PASS = TOKEN_RULES.passThreshold * 100;
 const titleById = new Map(ALL_TOPICS.map((t) => [t.id, t.title]));
+const attemptPassed = (a: QuizAttemptRow) => quizPassed(a.score, a.total);
 
 function relTime(iso: string): string {
   const mins = Math.round((Date.now() - new Date(iso).getTime()) / 60000);
@@ -71,7 +71,7 @@ function overallStats(progress: ProgressRow[], attempts: QuizAttemptRow[]) {
 
 function recentActivity(attempts: QuizAttemptRow[]): ActivityItem[] {
   return attempts.slice(0, 4).map((a) => {
-    const passed = scorePct(a) >= PASS;
+    const passed = attemptPassed(a);
     return {
       icon: passed ? "bi-check-circle-fill" : "bi-arrow-repeat",
       tone: passed ? ("success" as const) : ("warning" as const),
@@ -99,12 +99,29 @@ export function subjectDashboard(
     .filter((a) => ids.has(a.topic_id))
     .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
 
-  const masteredCount = topics.filter((t) => progressById.get(t.id)?.quiz_passed).length;
-  const viewedCount = topics.filter(
-    (t) => progressById.get(t.id)?.content_viewed && !progressById.get(t.id)?.quiz_passed
-  ).length;
+  // best score % per topic, from all attempts
+  const bestPctByTopic = new Map<string, number>();
+  const attemptCountByTopic = new Map<string, number>();
+  for (const a of attempts) {
+    bestPctByTopic.set(a.topic_id, Math.max(bestPctByTopic.get(a.topic_id) ?? 0, scorePct(a)));
+    attemptCountByTopic.set(a.topic_id, (attemptCountByTopic.get(a.topic_id) ?? 0) + 1);
+  }
+
+  const topicStatus = (id: string): "mastered" | "attempted" | "viewed" | "not-started" => {
+    const row = progressById.get(id);
+    if (row?.quiz_passed) return "mastered";
+    if (attemptCountByTopic.has(id)) return "attempted";
+    if (row?.content_viewed) return "viewed";
+    return "not-started";
+  };
+
   const total = topics.length;
-  const notStartedCount = total - masteredCount - viewedCount;
+  const masteredCount = topics.filter((t) => topicStatus(t.id) === "mastered").length;
+  const attemptedCount = topics.filter((t) => topicStatus(t.id) === "attempted").length;
+  const viewedCount = topics.filter((t) => topicStatus(t.id) === "viewed").length;
+  const notStartedCount = total - masteredCount - attemptedCount - viewedCount;
+  /** topics with any activity (viewed / attempted / mastered) */
+  const startedCount = total - notStartedCount;
 
   const avgScore =
     attempts.length > 0 ? Math.round(attempts.reduce((s, a) => s + scorePct(a), 0) / attempts.length) : 0;
@@ -116,23 +133,19 @@ export function subjectDashboard(
   const passedSoFar = new Set<string>();
   const masterySpark: number[] = [];
   for (const a of attempts) {
-    if (scorePct(a) >= PASS) passedSoFar.add(a.topic_id);
+    if (attemptPassed(a)) passedSoFar.add(a.topic_id);
     masterySpark.push(passedSoFar.size);
   }
 
-  const perTopic = topics.map((t) => {
-    const row = progressById.get(t.id);
-    return {
-      id: t.id,
-      title: t.title,
-      day: t.day,
-      tokenRewardBase: t.tokenRewardBase,
-      status: (row?.quiz_passed ? "mastered" : row?.content_viewed ? "viewed" : "not-started") as
-        | "mastered"
-        | "viewed"
-        | "not-started",
-    };
-  });
+  const perTopic = topics.map((t) => ({
+    id: t.id,
+    title: t.title,
+    day: t.day,
+    tokenRewardBase: t.tokenRewardBase,
+    status: topicStatus(t.id),
+    bestPct: bestPctByTopic.has(t.id) ? Math.round(bestPctByTopic.get(t.id)!) : null,
+    attempts: attemptCountByTopic.get(t.id) ?? 0,
+  }));
 
   const plan = (def?.plan ?? []).map((p) => {
     const dayTopics = perTopic.filter((t) => t.day === p.day);
@@ -151,7 +164,7 @@ export function subjectDashboard(
     score: a.score,
     total: a.total,
     pct: Math.round(scorePct(a)),
-    passed: scorePct(a) >= PASS,
+    passed: attemptPassed(a),
     when: new Date(a.created_at),
   }));
 
@@ -162,8 +175,10 @@ export function subjectDashboard(
     subject: def?.meta,
     total,
     masteredCount,
+    attemptedCount,
     viewedCount,
     notStartedCount,
+    startedCount,
     avgScore,
     scoreTrend,
     attemptCount: attempts.length,

@@ -4,7 +4,7 @@
  */
 export const TOKEN_RULES = {
   /** Fraction of a topic's questions correct needed to "master" it. */
-  passThreshold: 0.8,
+  passThreshold: 0.6,
 
   earn: {
     /** Fallback when a topic has no `token_reward_base`. */
@@ -21,10 +21,23 @@ export const TOKEN_RULES = {
   },
 
   spend: {
-    duelStakeDefault: 5,
-    groupQuizStakePerMemberDefault: 5,
+    // Default to a free duel / team quiz — a student with a zero balance can
+    // still play. Staking tokens is opt-in.
+    duelStakeDefault: 0,
+    groupQuizStakePerMemberDefault: 0,
   },
 } as const;
+
+/**
+ * Did this quiz attempt master the topic? Uses `passThreshold`, but a short
+ * quiz always passes on "all but one" so a single slip on a 3–5 question set
+ * isn't a wall.
+ */
+export function quizPassed(score: number, total: number): boolean {
+  if (total <= 0) return false;
+  if (total <= 5 && total - score <= 1) return true;
+  return score / total >= TOKEN_RULES.passThreshold;
+}
 
 export type TokenReason =
   | "topic_mastered"

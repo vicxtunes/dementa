@@ -17,24 +17,37 @@ export default async function TopicsPage({
   const s = d.subject(subjectId);
   const href = (id: string) => `/subjects/${subjectId}/topics/${id}`;
 
-  const row = (t: { id: string; title: string; tokenRewardBase: number; status: string }) => (
-    <Link key={t.id} href={href(t.id)} className="transaction-item" style={{ textDecoration: "none" }}>
-      <div className="transaction-icon bg-forest-light text-lime">
-        <i
-          className={`bi ${
-            t.status === "mastered" ? "bi-check-lg" : t.status === "viewed" ? "bi-book" : "bi-circle"
-          }`}
-        />
-      </div>
-      <div className="transaction-info">
-        <div className="transaction-name">{t.title}</div>
-        <div className="transaction-date">
-          {t.status === "mastered" ? "Mastered" : t.status === "viewed" ? "Notes read" : "Not started"}
+  const STATUS: Record<string, { icon: string; label: string }> = {
+    mastered: { icon: "bi-check-lg", label: "Mastered" },
+    attempted: { icon: "bi-arrow-repeat", label: "In progress" },
+    viewed: { icon: "bi-book", label: "Notes read" },
+    "not-started": { icon: "bi-circle", label: "Not started" },
+  };
+
+  const row = (t: {
+    id: string;
+    title: string;
+    tokenRewardBase: number;
+    status: string;
+    bestPct?: number | null;
+  }) => {
+    const st = STATUS[t.status] ?? STATUS["not-started"];
+    return (
+      <Link key={t.id} href={href(t.id)} className="transaction-item" style={{ textDecoration: "none" }}>
+        <div className="transaction-icon bg-forest-light text-lime">
+          <i className={`bi ${st.icon}`} />
         </div>
-      </div>
-      <div className="transaction-amount table-user-sub">+{t.tokenRewardBase} 🪙</div>
-    </Link>
-  );
+        <div className="transaction-info">
+          <div className="transaction-name">{t.title}</div>
+          <div className="transaction-date">
+            {st.label}
+            {t.status === "attempted" && t.bestPct != null ? ` · best ${t.bestPct}%` : ""}
+          </div>
+        </div>
+        <div className="transaction-amount table-user-sub">+{t.tokenRewardBase} 🪙</div>
+      </Link>
+    );
+  };
 
   return (
     <div className="card">

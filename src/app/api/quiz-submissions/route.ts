@@ -4,7 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { gradeQuiz, type GradableQuestion, type SubmittedAnswer } from "@/lib/domain/grading";
 import { getTopic } from "@/lib/subjects";
 import { awardTopicMastery, tokensEnabled } from "@/lib/domain/tokens/award.server";
-import { TOKEN_RULES } from "@/lib/config/tokens";
+import { quizPassed } from "@/lib/config/tokens";
 
 type Body = {
   subjectId: string;
@@ -64,7 +64,7 @@ export async function POST(request: Request) {
   }));
 
   const { perQuestion, score, total } = gradeQuiz(questions, normAnswers);
-  const passed = total > 0 && score / total >= TOKEN_RULES.passThreshold;
+  const passed = quizPassed(score, total);
 
   const writer = tokensEnabled() ? createAdminClient() : supabase;
 

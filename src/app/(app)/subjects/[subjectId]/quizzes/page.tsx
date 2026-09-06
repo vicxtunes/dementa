@@ -22,11 +22,15 @@ export default async function SubjectQuizzesPage({
     data: { user },
   } = await supabase.auth.getUser();
 
-  const [topics, classmates, matches] = await Promise.all([
+  const [topics, classmates, matches, meProfile] = await Promise.all([
     getVisibleTopics(subjectId),
     myClassmates(),
     myMatches(subjectId),
+    user
+      ? supabase.from("profiles").select("token_balance").eq("id", user.id).maybeSingle<{ token_balance: number }>()
+      : Promise.resolve({ data: null }),
   ]);
+  const tokenBalance = meProfile?.data?.token_balance ?? 0;
 
   // Only show matches I'm actually a participant in.
   const withParts = await Promise.all(
@@ -45,6 +49,7 @@ export default async function SubjectQuizzesPage({
             subjectId={subjectId}
             topics={topics.map((t) => ({ id: t.id, title: t.title }))}
             classmates={classmates}
+            tokenBalance={tokenBalance}
           />
         </div>
       </div>

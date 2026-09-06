@@ -1,12 +1,13 @@
 import Link from "next/link";
 import { loadDashboard } from "@/lib/domain/curriculum/dashboard";
 import { listSubjects } from "@/lib/domain/curriculum/queries";
+import { myInvites } from "@/lib/domain/matches/queries";
 import { conversations } from "@/lib/mock-data";
 import { SubjectCard } from "@/components/spark/subject-card";
 import { CardHeader, PageHeader } from "@/components/spark/primitives";
 
 export default async function HomePage() {
-  const d = await loadDashboard();
+  const [d, invites] = await Promise.all([loadDashboard(), myInvites()]);
   const firstName = d.profile.full_name?.split(" ")[0];
   const isTeacher = d.profile.role === "teacher";
   const subjects = listSubjects();
@@ -21,6 +22,18 @@ export default async function HomePage() {
             : `Class ${d.profile.class_code} · your academic journey, one place`
         }
       />
+
+      {invites.map((inv) => (
+        <div key={inv.matchId} className="alert-custom alert-custom-primary d-flex align-items-center justify-content-between gap-3 flex-wrap">
+          <span>
+            <i className="bi bi-controller me-2" />
+            <strong>{inv.from ?? "A classmate"}</strong> challenged you to a quiz — {inv.label}
+          </span>
+          <Link href={`/matches/${inv.matchId}`} className="btn-custom btn-custom-primary btn-custom-sm">
+            View challenge
+          </Link>
+        </div>
+      ))}
 
       <div className="row g-4">
         <div className="col-sm-4">
@@ -67,8 +80,9 @@ export default async function HomePage() {
                   <SubjectCard
                     subject={subject}
                     mastered={s.masteredCount}
+                    started={s.startedCount}
                     total={s.total}
-                    ctaLabel={s.masteredCount > 0 ? "Continue" : "Open"}
+                    ctaLabel={s.startedCount > 0 ? "Continue" : "Open"}
                   />
                 </div>
               );

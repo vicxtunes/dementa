@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getMatch, getParticipants, getMatchTeams, describeMatch } from "@/lib/domain/matches/queries";
 import { MatchRunner, type MatchQuestion } from "@/components/challenge/match-runner";
 import { MatchActions } from "@/components/challenge/match-actions";
+import { MatchPoll } from "@/components/challenge/match-poll";
 import { PageHeader, BadgeTable } from "@/components/spark/primitives";
 
 export default async function MatchPage({
@@ -129,9 +130,10 @@ export default async function MatchPage({
       : opponents.map((o) => o.full_name ?? "your opponent").join(", ");
     body = (
       <div className="card">
-        <p className="m-0">
+        <p className="mb-2">
           You scored <strong>{me.score}/{match.question_ids.length}</strong>. Waiting for {waitingOn} to finish.
         </p>
+        <MatchPoll />
       </div>
     );
   } else if (match.status === "pending") {
@@ -140,7 +142,8 @@ export default async function MatchPage({
       : opponents.map((o) => o.full_name ?? "your opponent").join(", ");
     body = (
       <div className="card">
-        <p className="m-0">Waiting for {waitingOn} to accept.</p>
+        <p className="mb-2">Waiting for {waitingOn} to accept.</p>
+        <MatchPoll />
       </div>
     );
   } else {

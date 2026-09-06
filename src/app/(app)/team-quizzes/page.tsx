@@ -13,7 +13,15 @@ export default async function TeamQuizzesPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const [mine, classTeams, matches] = await Promise.all([myTeams(), listClassTeams(), myMatches()]);
+  const [mine, classTeams, matches, meProfile] = await Promise.all([
+    myTeams(),
+    listClassTeams(),
+    myMatches(),
+    user
+      ? supabase.from("profiles").select("token_balance").eq("id", user.id).maybeSingle<{ token_balance: number }>()
+      : Promise.resolve({ data: null }),
+  ]);
+  const tokenBalance = meProfile?.data?.token_balance ?? 0;
 
   const visibleBySubject = await Promise.all(
     SUBJECT_DEFINITIONS.map(async (d) => ({ d, visible: await getVisibleTopicIds(d.meta.id) }))
@@ -61,6 +69,7 @@ export default async function TeamQuizzesPage() {
                   memberCount: t.members.length,
                 }))}
                 subjects={subjects}
+                tokenBalance={tokenBalance}
               />
             )}
           </div>
