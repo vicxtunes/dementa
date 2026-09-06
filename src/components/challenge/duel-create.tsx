@@ -43,8 +43,10 @@ export function DuelCreate({
           opponentIds: [opponent],
         }),
       });
-      const data = await res.json();
-      if (!res.ok) return setError(data.error ?? "Could not create the duel.");
+      const data = await res.json().catch(() => ({}) as { matchId?: string; error?: string });
+      if (!res.ok || !data.matchId) {
+        return setError(data.error ?? "Could not create the duel.");
+      }
       router.push(`/matches/${data.matchId}`);
     });
   }

@@ -46,8 +46,10 @@ export function GeneralQuizCreate({
           opponentIds: mode === "duel" ? [opponent] : [],
         }),
       });
-      const data = await res.json();
-      if (!res.ok) return setError(data.error ?? "Could not create the quiz.");
+      const data = await res.json().catch(() => ({}) as { matchId?: string; error?: string });
+      if (!res.ok || !data.matchId) {
+        return setError(data.error ?? "Could not create the quiz.");
+      }
       router.push(`/matches/${data.matchId}`);
     });
   }
