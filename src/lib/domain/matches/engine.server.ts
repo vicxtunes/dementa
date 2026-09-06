@@ -107,18 +107,31 @@ export async function settleMatch(admin: Admin, matchId: string): Promise<void> 
         winner = null; // tie
       }
     }
-    if (winner && stake > 0) {
-      const pot = stake * joined.length;
-      const winners = joined.filter((p) => p.team_id === winner);
-      const share = Math.floor(pot / winners.length);
-      for (const w of winners) {
-        await admin.rpc("apply_token_delta", {
-          p_user_id: w.user_id,
-          p_amount: share,
-          p_reason: "group_quiz_payout",
-          p_reference_id: matchId,
-          p_dedup: true,
-        });
+    if (stake > 0) {
+      if (winner) {
+        const pot = stake * joined.length;
+        const winners = joined.filter((p) => p.team_id === winner);
+        const share = Math.floor(pot / winners.length);
+        for (const w of winners) {
+          await admin.rpc("apply_token_delta", {
+            p_user_id: w.user_id,
+            p_amount: share,
+            p_reason: "group_quiz_payout",
+            p_reference_id: matchId,
+            p_dedup: true,
+          });
+        }
+      } else {
+        // Tie — refund every entrant their stake, same as a drawn duel.
+        for (const p of joined) {
+          await admin.rpc("apply_token_delta", {
+            p_user_id: p.user_id,
+            p_amount: stake,
+            p_reason: "group_quiz_refund",
+            p_reference_id: matchId,
+            p_dedup: true,
+          });
+        }
       }
     }
     await admin

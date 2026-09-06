@@ -52,6 +52,9 @@ export async function POST(request: Request, ctx: { params: Promise<{ id: string
 
   if (b.action === "accept") {
     if (part.status !== "invited") return NextResponse.json({ error: "Nothing to accept." }, { status: 400 });
+    if (match.status === "completed" || match.status === "declined") {
+      return NextResponse.json({ error: "This match is already over." }, { status: 400 });
+    }
     if (stake > 0 && tokensEnabled()) {
       const { data: me } = await admin
         .from("profiles")

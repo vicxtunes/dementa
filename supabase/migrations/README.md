@@ -13,6 +13,7 @@ Run **in order** in the Supabase SQL editor. Each is guarded for safe re-runs.
 | 007 | `007_challenge_events.sql` | `challenges` (time-boxed prize events) + `challenge_entries` + `challenge_leaderboard` view + `close_expired_challenges()`. **Run this.** | run for M6 |
 | 008 | `008_group_quiz_refund.sql` | Adds the `group_quiz_refund` token reason — team-quiz stakes are refunded when a whole team declines. **Run this** for the `/teams` + `/team-quizzes` feature. | run for team quizzes |
 | 009 | `009_match_schema_sync.sql` | Reconciles drift: adds `matches.is_general`, `matches.topic_ids`, `match_participants.status` (the deployed DB predates them, breaking every non-solo match) and re-asserts the match RLS. **Run this** — unblocks 1v1 duels as well as team quizzes. | run for duels + team quizzes |
+| 010 | `010_match_check_constraints.sql` | More 004 drift: re-adds the `matches.mode` / `matches.status` / `match_teams.slot` / `match_participants.status` CHECK constraints (deployed `mode` check lacks `'group'`). **Run this** after 009. | run for team quizzes |
 
 After any change to `src/lib/subjects/**`:
 
