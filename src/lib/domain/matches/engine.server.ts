@@ -83,6 +83,13 @@ export async function settleMatch(admin: Admin, matchId: string): Promise<void> 
       .select("team_id")
       .eq("match_id", matchId)
       .returns<{ team_id: string }[]>();
+
+    // Don't resolve a team quiz until at least one player on each side has
+    // played — otherwise a fast team could settle it before the other team
+    // has even accepted.
+    const finishedByTeam = new Set(joined.map((p) => p.team_id).filter(Boolean));
+    if ((teams ?? []).some((t) => !finishedByTeam.has(t.team_id))) return;
+
     const teamScore = new Map<string, number>();
     for (const p of joined) {
       if (!p.team_id) continue;

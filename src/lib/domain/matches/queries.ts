@@ -47,6 +47,20 @@ export async function getMatch(matchId: string): Promise<MatchRow | null> {
   return data;
 }
 
+export type MatchTeam = { team_id: string; slot: "a" | "b"; score: number | null; name: string };
+
+export async function getMatchTeams(matchId: string): Promise<MatchTeam[]> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("match_teams")
+    .select("team_id, slot, score, teams(name)")
+    .eq("match_id", matchId)
+    .returns<{ team_id: string; slot: "a" | "b"; score: number | null; teams: { name: string } | null }[]>();
+  return (data ?? [])
+    .map((r) => ({ team_id: r.team_id, slot: r.slot, score: r.score, name: r.teams?.name ?? "Team" }))
+    .sort((a, b) => a.slot.localeCompare(b.slot));
+}
+
 export async function getParticipants(matchId: string): Promise<MatchParticipant[]> {
   const supabase = await createClient();
   const { data } = await supabase

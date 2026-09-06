@@ -3,7 +3,17 @@ import { createServerClient } from "@supabase/ssr";
 
 // The authed hub: home, challenges, and the teacher class view. The chat app is
 // still unauthenticated mock data, so it is left out here for now.
-const PROTECTED_PREFIXES = ["/home", "/subjects", "/wallet", "/classes", "/matches", "/quizzes", "/challenges"];
+const PROTECTED_PREFIXES = [
+  "/home",
+  "/subjects",
+  "/wallet",
+  "/classes",
+  "/matches",
+  "/quizzes",
+  "/challenges",
+  "/teams",
+  "/team-quizzes",
+];
 
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });
@@ -53,5 +63,7 @@ export const config = {
     "/matches/:path*",
     "/quizzes/:path*",
     "/challenges/:path*",
+    "/teams/:path*",
+    "/team-quizzes/:path*",
   ],
 };

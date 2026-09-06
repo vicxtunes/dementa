@@ -34,7 +34,11 @@ export default async function QuizzesPage() {
       <PageHeader
         title="Quizzes"
         subtitle="Build your own quiz across any subjects — practise solo or challenge a classmate."
-      />
+      >
+        <Link href="/team-quizzes" className="btn-custom btn-custom-light btn-custom-sm">
+          <i className="bi bi-people" /> Team quizzes
+        </Link>
+      </PageHeader>
       <div className="row g-4">
         <div className="col-lg-6">
           <div className="card">

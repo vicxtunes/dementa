@@ -11,6 +11,8 @@ Run **in order** in the Supabase SQL editor. Each is guarded for safe re-runs.
 | 005 | `005_rename_topics.sql` | `challenges`→`topics`, `challenge_id`→`topic_id` everywhere; `token_transactions.reason` widened (`topic_mastered` + duel/group/prize); `resources` gets `topic_id`+`kind`; `class_overview`→`topics_mastered`. | applied |
 | 006 | `006_match_rls_fix.sql` | Fixes the recursive RLS on `matches`/`match_participants`/`match_teams` from 004 (adds `my_match_ids()`), opens the accept/decline/answer lifecycle. **Run this.** | run for M4+ |
 | 007 | `007_challenge_events.sql` | `challenges` (time-boxed prize events) + `challenge_entries` + `challenge_leaderboard` view + `close_expired_challenges()`. **Run this.** | run for M6 |
+| 008 | `008_group_quiz_refund.sql` | Adds the `group_quiz_refund` token reason — team-quiz stakes are refunded when a whole team declines. **Run this** for the `/teams` + `/team-quizzes` feature. | run for team quizzes |
+| 009 | `009_match_schema_sync.sql` | Reconciles drift: adds `matches.is_general`, `matches.topic_ids`, `match_participants.status` (the deployed DB predates them, breaking every non-solo match) and re-asserts the match RLS. **Run this** — unblocks 1v1 duels as well as team quizzes. | run for duels + team quizzes |
 
 After any change to `src/lib/subjects/**`:
 

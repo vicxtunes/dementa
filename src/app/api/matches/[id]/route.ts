@@ -77,6 +77,42 @@ export async function POST(request: Request, ctx: { params: Promise<{ id: string
   if (b.action === "decline") {
     if (part.status !== "invited") return NextResponse.json({ error: "Nothing to decline." }, { status: 400 });
     await admin.from("match_participants").update({ status: "declined" }).eq("match_id", matchId).eq("user_id", user.id);
+
+    if (match.mode === "group") {
+      // One player declining doesn't end a team quiz. It's only off if a whole
+      // team can no longer field anyone.
+      const { data: rows } = await admin
+        .from("match_participants")
+        .select("user_id, team_id, status")
+        .eq("match_id", matchId)
+        .returns<{ user_id: string; team_id: string | null; status: string }[]>();
+      const byTeam = new Map<string, string[]>();
+      for (const r of rows ?? []) {
+        if (!r.team_id) continue;
+        byTeam.set(r.team_id, [...(byTeam.get(r.team_id) ?? []), r.status]);
+      }
+      const aTeamOut = [...byTeam.values()].some((statuses) => statuses.every((s) => s === "declined"));
+      if (!aTeamOut) {
+        return NextResponse.json({ ok: true, status: match.status });
+      }
+
+      await admin.from("matches").update({ status: "declined" }).eq("id", matchId);
+      if (stake > 0 && tokensEnabled()) {
+        // Refund everyone who had already paid the entry cost.
+        const paid = (rows ?? []).filter((r) => r.status === "joined" || r.status === "finished");
+        for (const r of paid) {
+          await admin.rpc("apply_token_delta", {
+            p_user_id: r.user_id,
+            p_amount: stake,
+            p_reason: "group_quiz_refund",
+            p_reference_id: matchId,
+            p_dedup: true,
+          });
+        }
+      }
+      return NextResponse.json({ ok: true, status: "declined" });
+    }
+
     await admin.from("matches").update({ status: "declined" }).eq("id", matchId);
     if (stake > 0 && tokensEnabled() && match.mode === "duel") {
       await admin.rpc("apply_token_delta", {

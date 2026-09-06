@@ -12,8 +12,8 @@ type Body = {
   questionCount: number;
   stake: number;
   opponentIds?: string[]; // duel
-  teamA?: { name: string; memberIds: string[] }; // group (creator auto-added)
-  teamB?: { name: string; memberIds: string[] };
+  teamAId?: string; // group — the creator's team (they must be a member)
+  teamBId?: string; // group — the opposing team
 };
 
 export async function POST(request: Request) {
@@ -92,25 +92,36 @@ export async function POST(request: Request) {
     ]);
     await deduct(user.id, "duel_entry");
   } else {
-    // group
-    const aMembers = [...new Set([user.id, ...(b.teamA?.memberIds ?? [])])];
-    const bMembers = [...new Set(b.teamB?.memberIds ?? [])];
-    if (aMembers.length < 1 || bMembers.length < 1) {
-      return NextResponse.json({ error: "Both teams need members." }, { status: 400 });
+    // group — two existing teams from the creator's class
+    const teamAId = b.teamAId;
+    const teamBId = b.teamBId;
+    if (!teamAId || !teamBId || teamAId === teamBId) {
+      return NextResponse.json({ error: "Pick your team and a different opposing team." }, { status: 400 });
     }
+
     const { data: teams } = await admin
       .from("teams")
-      .insert([
-        { name: b.teamA?.name || "Team A", class_code: me?.class_code, created_by: user.id },
-        { name: b.teamB?.name || "Team B", class_code: me?.class_code, created_by: user.id },
-      ])
-      .select("id")
-      .returns<{ id: string }[]>();
-    const [teamAId, teamBId] = (teams ?? []).map((t) => t.id);
-    await admin.from("team_members").insert([
-      ...aMembers.map((uid) => ({ team_id: teamAId, user_id: uid })),
-      ...bMembers.map((uid) => ({ team_id: teamBId, user_id: uid })),
-    ]);
+      .select("id, class_code")
+      .in("id", [teamAId, teamBId])
+      .returns<{ id: string; class_code: string }[]>();
+    if ((teams?.length ?? 0) !== 2 || teams!.some((t) => t.class_code !== me?.class_code)) {
+      return NextResponse.json({ error: "Both teams must be in your class." }, { status: 400 });
+    }
+
+    const { data: memberRows } = await admin
+      .from("team_members")
+      .select("team_id, user_id")
+      .in("team_id", [teamAId, teamBId])
+      .returns<{ team_id: string; user_id: string }[]>();
+    const aMembers = [...new Set((memberRows ?? []).filter((m) => m.team_id === teamAId).map((m) => m.user_id))];
+    const bMembers = [...new Set((memberRows ?? []).filter((m) => m.team_id === teamBId).map((m) => m.user_id))];
+    if (!aMembers.includes(user.id)) {
+      return NextResponse.json({ error: "You can only start a quiz for a team you're on." }, { status: 403 });
+    }
+    if (aMembers.length < 1 || bMembers.length < 1) {
+      return NextResponse.json({ error: "Both teams need at least one member." }, { status: 400 });
+    }
+
     await admin.from("match_teams").insert([
       { match_id: match.id, team_id: teamAId, slot: "a" },
       { match_id: match.id, team_id: teamBId, slot: "b" },

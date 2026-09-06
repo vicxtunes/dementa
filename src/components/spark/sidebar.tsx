@@ -108,6 +108,7 @@ export function Sidebar({
               )}
             </li>
             {link("/quizzes", "bi-controller", "Quizzes")}
+            {link("/teams", "bi-people-fill", "Teams")}
             {link("/challenges", "bi-trophy-fill", "Challenges")}
             {link("/wallet", "bi-coin", "Wallet")}
           </ul>

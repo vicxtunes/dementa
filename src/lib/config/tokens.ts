@@ -36,6 +36,7 @@ export type TokenReason =
   | "duel_payout"
   | "group_quiz_entry"
   | "group_quiz_payout"
+  | "group_quiz_refund"
   | "challenge_prize"
   | "unlock_purchase";
 
@@ -49,6 +50,7 @@ export const TOKEN_REASON_LABELS: Record<TokenReason, string> = {
   duel_payout: "Duel winnings",
   group_quiz_entry: "Group quiz stake",
   group_quiz_payout: "Group quiz winnings",
+  group_quiz_refund: "Group quiz refund",
   challenge_prize: "Challenge prize",
   unlock_purchase: "Unlock",
 };
