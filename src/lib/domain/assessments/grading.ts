@@ -9,13 +9,13 @@ import type {
 /** Fold for lenient exact-match comparison of short answers. */
 export function normalizeText(s: string): string {
   return s
-    .toLowerCase()
     .normalize("NFKD")
     .replace(/[̀-ͯ]/g, "") // strip diacritics
+    .toLowerCase()
     .replace(/[‘’“”"']/g, "") // strip quotes
     .replace(/\s+/g, " ")
-    .replace(/[.。]+$/, "") // trailing full stop
-    .trim();
+    .trim()
+    .replace(/[.。]+$/, ""); // trailing full stop
 }
 
 export function isAutogradable(item: PaperItem, key: ItemKey | undefined): boolean {
