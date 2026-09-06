@@ -3,6 +3,14 @@ import { notFound } from "next/navigation";
 import { loadDashboard } from "@/lib/domain/curriculum/dashboard";
 import { getSubject } from "@/lib/domain/curriculum/queries";
 import { listPapers } from "@/lib/domain/assessments/queries";
+import { createClient } from "@/lib/supabase/server";
+
+const CTA: Record<string, string> = {
+  in_progress: "Resume",
+  submitted: "Mark",
+  self_marking: "Mark",
+  completed: "Review",
+};
 
 export default async function PapersPage({
   params,
@@ -18,6 +26,23 @@ export default async function PapersPage({
 
   const all = await listPapers(subjectId);
   const papers = isTeacher ? all : all.filter((p) => p.published);
+
+  const attemptState = new Map<string, string>();
+  if (!isTeacher && papers.length > 0) {
+    const supabase = await createClient();
+    const { data: rows } = await supabase
+      .from("assessment_attempts")
+      .select("assessment_id, state, started_at")
+      .in(
+        "assessment_id",
+        papers.map((p) => p.id)
+      )
+      .order("started_at", { ascending: false })
+      .returns<{ assessment_id: string; state: string; started_at: string }[]>();
+    for (const r of rows ?? []) {
+      if (!attemptState.has(r.assessment_id)) attemptState.set(r.assessment_id, r.state);
+    }
+  }
 
   if (papers.length === 0) {
     return (
@@ -77,7 +102,7 @@ export default async function PapersPage({
                     }
                     className="btn-custom btn-custom-light btn-custom-sm"
                   >
-                    {isTeacher ? "Edit" : "Open"}
+                    {isTeacher ? "Edit" : CTA[attemptState.get(p.id) ?? ""] ?? "Start"}
                   </Link>
                 </td>
               </tr>
