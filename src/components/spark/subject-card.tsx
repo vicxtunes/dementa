@@ -5,15 +5,19 @@ export function SubjectCard({
   subject,
   mastered,
   total,
+  started = 0,
   ctaLabel,
 }: {
   subject: SubjectMeta;
   mastered: number;
   total: number;
+  /** topics with any activity — viewed, attempted or mastered */
+  started?: number;
   ctaLabel: string;
 }) {
   const pct = total > 0 ? Math.round((mastered / total) * 100) : 0;
-  const state = pct === 100 ? "success" : mastered > 0 ? "pending" : "failed";
+  const inProgress = mastered > 0 || started > 0;
+  const state = pct === 100 ? "success" : inProgress ? "pending" : "failed";
 
   return (
     <div className="card h-100 d-flex flex-column">
@@ -40,7 +44,7 @@ export function SubjectCard({
           </div>
         </div>
         <span className={`badge-table ${state}`}>
-          {pct === 100 ? "Complete" : mastered > 0 ? "In progress" : "Not started"}
+          {pct === 100 ? "Complete" : inProgress ? "In progress" : "Not started"}
         </span>
       </div>
 
@@ -52,6 +56,7 @@ export function SubjectCard({
         <div className="progress-label-row">
           <span className="progress-label">
             {mastered} / {total} mastered
+            {started > mastered ? ` · ${started - mastered} in progress` : ""}
           </span>
           <span className="progress-value">{pct}%</span>
         </div>

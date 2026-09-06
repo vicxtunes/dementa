@@ -18,6 +18,7 @@ export function MatchRunner({ matchId, questions }: { matchId: string; questions
     questions.map(() => ({ selectedIndex: null, value: null }))
   );
   const [draft, setDraft] = useState("");
+  const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
   const q = questions[index];
@@ -34,16 +35,26 @@ export function MatchRunner({ matchId, questions }: { matchId: string; questions
       setDraft("");
       return;
     }
+    setError(null);
     startTransition(async () => {
       const finalAnswers = answers.map((a, i) =>
         i === index && q.type === "numeric" && draft.trim() ? { selectedIndex: null, value: draft.trim() } : a
       );
-      await fetch(`/api/matches/${matchId}`, {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ action: "finish", answers: finalAnswers }),
-      });
-      router.refresh();
+      try {
+        const res = await fetch(`/api/matches/${matchId}`, {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ action: "finish", answers: finalAnswers }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          setError(data.error ?? "Couldn't submit your answers.");
+          return;
+        }
+        router.refresh();
+      } catch {
+        setError("Couldn't reach the server — check your connection.");
+      }
     });
   }
 
@@ -90,6 +101,8 @@ export function MatchRunner({ matchId, questions }: { matchId: string; questions
           ))}
         </div>
       )}
+
+      {error && <div className="alert-custom alert-custom-danger d-block mt-3">{error}</div>}
 
       <button
         type="button"

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { TopicQuestion } from "@/lib/subjects";
 import { submitQuiz, type QuizResult } from "@/lib/actions/quiz";
+import { numericMatches } from "@/lib/domain/grading/parse-number";
 
 type Answer = { questionIndex: number; selectedIndex?: number; value?: string };
 
@@ -12,12 +13,7 @@ type Answer = { questionIndex: number; selectedIndex?: number; value?: string };
  *  authoritative score + token award comes back from the server. */
 function looksCorrect(q: TopicQuestion, a: Answer): boolean {
   if (q.type === "numeric") {
-    const raw = (a.value ?? "").trim().replace(/√/g, "sqrt").replace(/π/g, "pi").replace(/[°]/g, "");
-    const n = Number(raw);
-    if (Number.isFinite(n) && q.correctNumericValue != null) {
-      return Math.abs(n - q.correctNumericValue) <= (q.numericTolerance ?? 0.01);
-    }
-    return false;
+    return numericMatches(a.value ?? null, q.correctNumericValue ?? null, q.numericTolerance ?? null);
   }
   return a.selectedIndex === q.correctIndex;
 }

@@ -36,6 +36,16 @@ function builderPath(subjectId: string, paperId: string) {
   return `/subjects/${subjectId}/manage/papers/${paperId}`;
 }
 
+/** cost / reward / pass-mark, shared by create + update */
+function economyFields(fd: FormData) {
+  const passPctRaw = Number(fd.get("pass_pct"));
+  return {
+    token_cost_to_attempt: Math.max(0, Math.trunc(Number(fd.get("token_cost_to_attempt")) || 0)),
+    token_reward_on_completion: Math.max(0, Math.trunc(Number(fd.get("token_reward_on_completion")) || 0)),
+    pass_pct: Number.isFinite(passPctRaw) ? Math.min(1, Math.max(0, passPctRaw / 100)) : 0.8,
+  };
+}
+
 function revalidatePaper(subjectId: string, paperId: string) {
   revalidatePath(builderPath(subjectId, paperId));
   revalidatePath(`/subjects/${subjectId}/papers/${paperId}`);
@@ -56,7 +66,6 @@ export async function createPaper(formData: FormData) {
   const format = (str(formData, "format") || "structured") as PaperFormat;
   const kind = (str(formData, "kind") || "revision") as PaperKind;
   const duration = kind === "exam" ? intOrNull(formData, "duration_minutes") : null;
-  const reward = Math.max(0, Math.trunc(Number(formData.get("token_reward_on_completion")) || 10));
   const scope = str(formData, "scope") || "all";
 
   const { data, error } = await supabase
@@ -69,7 +78,7 @@ export async function createPaper(formData: FormData) {
       kind,
       duration_minutes: duration,
       instructions: str(formData, "instructions") || null,
-      token_reward_on_completion: reward,
+      ...economyFields(formData),
       published: false,
       created_by: userId,
     })
@@ -96,7 +105,7 @@ export async function updatePaper(formData: FormData) {
       kind,
       duration_minutes: kind === "exam" ? intOrNull(formData, "duration_minutes") : null,
       instructions: str(formData, "instructions") || null,
-      token_reward_on_completion: Math.max(0, Math.trunc(Number(formData.get("token_reward_on_completion")) || 10)),
+      ...economyFields(formData),
     })
     .eq("id", id);
   if (error) throw new Error(error.message);

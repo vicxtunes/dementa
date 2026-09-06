@@ -225,7 +225,9 @@ async function main() {
         "Section A has two compulsory items — answer both.\n" +
         "Section B has two parts, I and II — answer one item from each part.\n" +
         "Answer four items in all. Any additional item answered will not be scored.",
+      token_cost_to_attempt: 10,
       token_reward_on_completion: 40,
+      pass_pct: 0.8,
     })
     .select("id")
     .single();

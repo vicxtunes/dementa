@@ -15,7 +15,9 @@ export type PaperRow = {
   instructions: string | null;
   published: boolean;
   source: string | null;
+  token_cost_to_attempt: number;
   token_reward_on_completion: number;
+  pass_pct: number;
   created_at: string;
 };
 

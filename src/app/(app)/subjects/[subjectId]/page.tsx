@@ -110,12 +110,26 @@ export default async function SubjectOverviewPage({
                 {s.perTopic.slice(0, 5).map((t) => (
                   <Link key={t.id} href={topicHref(t.id)} className="transaction-item" style={{ textDecoration: "none" }}>
                     <div className="transaction-icon bg-forest-light text-lime">
-                      <i className={`bi ${t.status === "mastered" ? "bi-check-lg" : "bi-arrow-right"}`} />
+                      <i
+                        className={`bi ${
+                          t.status === "mastered"
+                            ? "bi-check-lg"
+                            : t.status === "attempted"
+                              ? "bi-arrow-repeat"
+                              : "bi-arrow-right"
+                        }`}
+                      />
                     </div>
                     <div className="transaction-info">
                       <div className="transaction-name">{t.title}</div>
                       <div className="transaction-date">
-                        {t.status === "mastered" ? "Mastered" : t.status === "viewed" ? "Notes read" : "Not started"}
+                        {t.status === "mastered"
+                          ? "Mastered"
+                          : t.status === "attempted"
+                            ? `In progress${t.bestPct != null ? ` · best ${t.bestPct}%` : ""}`
+                            : t.status === "viewed"
+                              ? "Notes read"
+                              : "Not started"}
                       </div>
                     </div>
                     <div className="transaction-amount table-user-sub">+{t.tokenRewardBase} 🪙</div>
@@ -159,7 +173,7 @@ export default async function SubjectOverviewPage({
             </div>
             <DonutChart
               labels={["Mastered", "In progress", "Not started"]}
-              series={[s.masteredCount, s.viewedCount, s.notStartedCount]}
+              series={[s.masteredCount, s.attemptedCount + s.viewedCount, s.notStartedCount]}
               totalLabel="Topics"
             />
             <div className="chart-legends-container">

@@ -1,6 +1,6 @@
 import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { awardAssessmentCompletion } from "@/lib/domain/tokens/award.server";
+import { awardAssessmentCompletion, chargeAssessmentEntry } from "@/lib/domain/tokens/award.server";
 import { computeDueAt, isExpired } from "./timing";
 import { scoreAttempt, selfMarkScore } from "./grading";
 import type {
@@ -122,15 +122,26 @@ async function finalize(
   return updated ?? { ...attempt, ...(patch as Partial<AttemptRow>) };
 }
 
+/** Did the attempt reach the paper's pass mark? */
+export function attemptPassed(attempt: AttemptRow, paper: PaperRow): boolean {
+  const max = attempt.total_max ?? (attempt.auto_max ?? 0) + (attempt.self_max ?? 0);
+  const got = attempt.total_score ?? attempt.auto_score ?? 0;
+  if (max <= 0) return true; // nothing to grade → count as passed
+  return got / max >= (paper.pass_pct ?? 0.8);
+}
+
 async function settleToken(admin: Admin, attempt: AttemptRow, paper: PaperRow): Promise<void> {
   if (attempt.token_awarded) return;
+  // Reward only when the student reached the pass mark.
+  if (!attemptPassed(attempt, paper)) {
+    await admin.from("assessment_attempts").update({ token_awarded: true }).eq("id", attempt.id);
+    return;
+  }
   const res = await awardAssessmentCompletion({
     userId: attempt.user_id,
     assessmentId: attempt.assessment_id,
     amount: paper.token_reward_on_completion,
   });
-  // mark awarded once the ledger op has run (awarded > 0), or when it was
-  // already paid on an earlier attempt (res.balance set, awarded 0).
   if (res.awarded > 0 || res.balance != null) {
     await admin.from("assessment_attempts").update({ token_awarded: true }).eq("id", attempt.id);
   }
@@ -157,9 +168,15 @@ export async function startAttempt(
   const admin = createAdminClient();
   const { data: paper } = await admin
     .from("assessments")
-    .select("id, kind, duration_minutes, published")
+    .select("id, kind, duration_minutes, published, token_cost_to_attempt")
     .eq("id", paperId)
-    .maybeSingle<{ id: string; kind: string; duration_minutes: number | null; published: boolean }>();
+    .maybeSingle<{
+      id: string;
+      kind: string;
+      duration_minutes: number | null;
+      published: boolean;
+      token_cost_to_attempt: number;
+    }>();
   if (!paper) return { error: "Unknown paper.", status: 404 };
 
   const { data: latest } = await admin
@@ -176,6 +193,19 @@ export async function startAttempt(
   }
   if (latest && latest.state === "completed" && paper.kind === "exam") {
     return { attempt: latest }; // one attempt only — hand back the finished one
+  }
+
+  const cost = paper.token_cost_to_attempt ?? 0;
+  if (cost > 0) {
+    const { data: prof } = await admin
+      .from("profiles")
+      .select("token_balance")
+      .eq("id", userId)
+      .single<{ token_balance: number }>();
+    const bal = prof?.token_balance ?? 0;
+    if (bal < cost) {
+      return { error: `This paper costs ${cost} 🪙 to attempt — you have ${bal}.`, status: 402 };
+    }
   }
 
   const startedAt = new Date().toISOString();
@@ -195,6 +225,14 @@ export async function startAttempt(
     // race on the exam partial-unique index — return whatever now exists
     if (latest) return { attempt: latest };
     return { error: error?.message ?? "Could not start.", status: 500 };
+  }
+
+  if (cost > 0) {
+    const charge = await chargeAssessmentEntry({ userId, attemptId: created.id, amount: cost });
+    if (!charge.ok) {
+      await admin.from("assessment_attempts").delete().eq("id", created.id);
+      return { error: charge.error ?? "Not enough tokens.", status: 402 };
+    }
   }
   return { attempt: created };
 }

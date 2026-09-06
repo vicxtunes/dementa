@@ -22,7 +22,14 @@ export default async function QuizzesPage() {
     topics: d.topics.filter((t) => visible.has(t.id)).map((t) => ({ id: t.id, title: t.title })),
   }));
 
-  const [classmates, matches] = await Promise.all([myClassmates(), myMatches()]);
+  const [classmates, matches, meProfile] = await Promise.all([
+    myClassmates(),
+    myMatches(),
+    user
+      ? supabase.from("profiles").select("token_balance").eq("id", user.id).maybeSingle<{ token_balance: number }>()
+      : Promise.resolve({ data: null }),
+  ]);
+  const tokenBalance = meProfile?.data?.token_balance ?? 0;
   const general = matches.filter((m) => m.is_general);
   const withParts = await Promise.all(
     general.slice(0, 15).map(async (m) => ({ m, parts: await getParticipants(m.id) }))
@@ -45,7 +52,7 @@ export default async function QuizzesPage() {
             <div className="card-header">
               <h2 className="card-title">New quiz</h2>
             </div>
-            <GeneralQuizCreate subjects={subjects} classmates={classmates} />
+            <GeneralQuizCreate subjects={subjects} classmates={classmates} tokenBalance={tokenBalance} />
           </div>
         </div>
 

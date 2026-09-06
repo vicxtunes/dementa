@@ -22,11 +22,15 @@ export default async function SubjectQuizzesPage({
     data: { user },
   } = await supabase.auth.getUser();
 
-  const [topics, classmates, matches] = await Promise.all([
+  const [topics, classmates, matches, meProfile] = await Promise.all([
     getVisibleTopics(subjectId),
     myClassmates(),
     myMatches(subjectId),
+    user
+      ? supabase.from("profiles").select("token_balance").eq("id", user.id).maybeSingle<{ token_balance: number }>()
+      : Promise.resolve({ data: null }),
   ]);
+  const tokenBalance = meProfile?.data?.token_balance ?? 0;
 
   // Only show matches I'm actually a participant in.
   const withParts = await Promise.all(
@@ -39,12 +43,13 @@ export default async function SubjectQuizzesPage({
       <div className="col-lg-5">
         <div className="card">
           <div className="card-header">
-            <h2 className="card-title">Challenge a classmate</h2>
+            <h2 className="card-title">Practice or challenge</h2>
           </div>
           <DuelCreate
             subjectId={subjectId}
             topics={topics.map((t) => ({ id: t.id, title: t.title }))}
             classmates={classmates}
+            tokenBalance={tokenBalance}
           />
         </div>
       </div>
@@ -55,7 +60,7 @@ export default async function SubjectQuizzesPage({
             <h2 className="card-title">Your quizzes</h2>
           </div>
           {mine.length === 0 ? (
-            <p className="item-sub m-0">No duels yet — challenge someone to get started.</p>
+            <p className="item-sub m-0">Nothing yet — practise solo or challenge a classmate.</p>
           ) : (
             <div className="transaction-list">
               {mine.map(({ m, parts }) => {

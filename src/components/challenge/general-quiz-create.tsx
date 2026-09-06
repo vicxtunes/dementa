@@ -9,9 +9,11 @@ type SubjectTopics = { id: string; title: string; topics: { id: string; title: s
 export function GeneralQuizCreate({
   subjects,
   classmates,
+  tokenBalance = 0,
 }: {
   subjects: SubjectTopics[];
   classmates: { id: string; full_name: string | null }[];
+  tokenBalance?: number;
 }) {
   const router = useRouter();
   const [mode, setMode] = useState<"solo" | "duel">("solo");
@@ -32,6 +34,9 @@ export function GeneralQuizCreate({
     setError(null);
     if (picked.length === 0) return setError("Pick at least one topic.");
     if (mode === "duel" && !opponent) return setError("Pick an opponent.");
+    if (mode === "duel" && stake > tokenBalance) {
+      return setError(`That stake is ${stake} 🪙 but you only have ${tokenBalance}. Lower it or set it to 0.`);
+    }
     startTransition(async () => {
       const res = await fetch("/api/matches", {
         method: "POST",
@@ -46,8 +51,10 @@ export function GeneralQuizCreate({
           opponentIds: mode === "duel" ? [opponent] : [],
         }),
       });
-      const data = await res.json();
-      if (!res.ok) return setError(data.error ?? "Could not create the quiz.");
+      const data = await res.json().catch(() => ({}) as { matchId?: string; error?: string });
+      if (!res.ok || !data.matchId) {
+        return setError(data.error ?? "Could not create the quiz.");
+      }
       router.push(`/matches/${data.matchId}`);
     });
   }
@@ -140,10 +147,12 @@ export function GeneralQuizCreate({
               id="g-stk"
               type="number"
               min={0}
+              max={tokenBalance}
               className="form-control-custom form-control-custom-sm"
               value={stake}
               onChange={(e) => setStake(Number(e.target.value))}
             />
+            <span className="item-sub">You have {tokenBalance} 🪙 · 0 = free</span>
           </div>
         )}
       </div>

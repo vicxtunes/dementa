@@ -91,6 +91,45 @@ export async function grantByTeacher(opts: {
 }
 
 /**
+ * Charges the entry cost when a student starts a paper. Fails (without moving
+ * anything) if they can't afford it. Keyed on the attempt id so each retake of
+ * a revision paper pays again.
+ */
+export async function chargeAssessmentEntry(opts: {
+  userId: string;
+  attemptId: string;
+  amount: number;
+}): Promise<{ ok: boolean; balance: number | null; error?: string }> {
+  if (!tokensEnabled() || opts.amount <= 0) return { ok: true, balance: null };
+  const admin = createAdminClient();
+  const { data: prof } = await admin
+    .from("profiles")
+    .select("token_balance")
+    .eq("id", opts.userId)
+    .single<{ token_balance: number }>();
+  const balance = prof?.token_balance ?? 0;
+  if (balance < opts.amount) {
+    return {
+      ok: false,
+      balance,
+      error: `This paper costs ${opts.amount} 🪙 to attempt — you have ${balance}.`,
+    };
+  }
+  const after = await delta(admin, opts.userId, -opts.amount, "assessment_entry", opts.attemptId, false);
+  return { ok: true, balance: after };
+}
+
+/** Give the entry cost back (e.g. attempt abandoned before any answering). */
+export async function refundAssessmentEntry(opts: {
+  userId: string;
+  attemptId: string;
+  amount: number;
+}): Promise<void> {
+  if (!tokensEnabled() || opts.amount <= 0) return;
+  await delta(createAdminClient(), opts.userId, opts.amount, "assessment_refund", opts.attemptId, true);
+}
+
+/**
  * Credits the completion reward for an exam / paper, once per paper regardless
  * of how many revision retakes the student does (dedup key = assessmentId).
  */

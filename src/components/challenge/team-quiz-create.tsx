@@ -11,10 +11,12 @@ export function TeamQuizCreate({
   myTeams,
   classTeams,
   subjects,
+  tokenBalance = 0,
 }: {
   myTeams: TeamOption[];
   classTeams: TeamOption[];
   subjects: SubjectTopics[];
+  tokenBalance?: number;
 }) {
   const router = useRouter();
   const [teamAId, setTeamAId] = useState(myTeams[0]?.id ?? "");
@@ -38,6 +40,9 @@ export function TeamQuizCreate({
     if (!teamAId) return setError("Pick your team.");
     if (!teamBId) return setError("Pick an opposing team.");
     if (picked.length === 0) return setError("Pick at least one topic.");
+    if (stake > tokenBalance) {
+      return setError(`That stake is ${stake} 🪙 but you only have ${tokenBalance}. Lower it or set it to 0.`);
+    }
     startTransition(async () => {
       const res = await fetch("/api/matches", {
         method: "POST",
@@ -169,10 +174,12 @@ export function TeamQuizCreate({
             id="tq-stk"
             type="number"
             min={0}
+            max={tokenBalance}
             className="form-control-custom form-control-custom-sm"
             value={stake}
             onChange={(e) => setStake(Number(e.target.value))}
           />
+          <span className="item-sub">You have {tokenBalance} 🪙 · 0 = free</span>
         </div>
       </div>
 

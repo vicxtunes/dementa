@@ -1,6 +1,9 @@
 import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { gradeQuiz, type GradableQuestion, type SubmittedAnswer } from "@/lib/domain/grading";
+import { TOKEN_RULES } from "@/lib/config/tokens";
+
+const WINNER_POT_SHARE = TOKEN_RULES.spend.winnerPotShare;
 
 type Admin = ReturnType<typeof createAdminClient>;
 
@@ -109,9 +112,9 @@ export async function settleMatch(admin: Admin, matchId: string): Promise<void> 
     }
     if (stake > 0) {
       if (winner) {
-        const pot = stake * joined.length;
+        const pot = Math.floor(stake * joined.length * WINNER_POT_SHARE); // rest is house rake
         const winners = joined.filter((p) => p.team_id === winner);
-        const share = Math.floor(pot / winners.length);
+        const share = Math.max(stake, Math.floor(pot / winners.length));
         for (const w of winners) {
           await admin.rpc("apply_token_delta", {
             p_user_id: w.user_id,
@@ -150,9 +153,10 @@ export async function settleMatch(admin: Admin, matchId: string): Promise<void> 
   if (stake > 0 && match.mode === "duel") {
     const pot = stake * joined.length;
     if (winner) {
+      // winner takes WINNER_POT_SHARE of the pot; the rest is the house rake
       await admin.rpc("apply_token_delta", {
         p_user_id: winner,
-        p_amount: pot,
+        p_amount: Math.max(stake, Math.floor(pot * WINNER_POT_SHARE)),
         p_reason: "duel_payout",
         p_reference_id: matchId,
         p_dedup: true,
