@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { loadDashboard } from "@/lib/domain/curriculum/dashboard";
 import { getPaper, listAttemptsForTeacher } from "@/lib/domain/assessments/queries";
+import { closeExpiredAttempts } from "@/lib/domain/assessments/service";
 import { PageHeader } from "@/components/spark/primitives";
 
 export default async function PaperSubmissionsPage({
@@ -25,7 +26,17 @@ export default async function PaperSubmissionsPage({
       >
         <i className="bi bi-arrow-left" /> Back to builder
       </Link>
-      <PageHeader title={`${paper.title} — submissions`} subtitle={`${attempts.length} attempt${attempts.length === 1 ? "" : "s"}`} />
+      <PageHeader title={`${paper.title} — submissions`} subtitle={`${attempts.length} attempt${attempts.length === 1 ? "" : "s"}`}>
+        {attempts.some((a) => a.state === "in_progress" && a.due_at && new Date(a.due_at) < new Date()) && (
+          <form action={closeExpiredAttempts}>
+            <input type="hidden" name="assessment_id" value={paperId} />
+            <input type="hidden" name="subject_id" value={subjectId} />
+            <button type="submit" className="btn-custom btn-custom-light btn-custom-sm">
+              <i className="bi bi-hourglass-bottom" /> Close expired attempts
+            </button>
+          </form>
+        )}
+      </PageHeader>
 
       {attempts.length === 0 ? (
         <div className="card">

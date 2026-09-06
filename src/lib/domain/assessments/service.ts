@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { ensureAttemptFresh } from "./attempts.server";
 import type { PaperFormat, PaperKind, QuestionType } from "./queries";
 
 const SUB_LABELS = "i ii iii iv v vi vii viii ix x xi xii".split(" ");
@@ -382,4 +383,27 @@ export async function removeItemImage(formData: FormData) {
     // best effort — an orphaned object is harmless
   }
   revalidatePaper(subjectId, paperId);
+}
+
+// ---------------------------------------------------------------------------
+// Close attempts whose timer expired while the tab was closed
+// ---------------------------------------------------------------------------
+
+export async function closeExpiredAttempts(formData: FormData) {
+  await requireTeacher();
+  const paperId = str(formData, "assessment_id");
+  const subjectId = str(formData, "subject_id");
+  if (!paperId) return;
+
+  const admin = createAdminClient();
+  const { data: stale } = await admin
+    .from("assessment_attempts")
+    .select("id")
+    .eq("assessment_id", paperId)
+    .eq("state", "in_progress")
+    .lt("due_at", new Date().toISOString())
+    .returns<{ id: string }[]>();
+  for (const a of stale ?? []) await ensureAttemptFresh(a.id);
+
+  revalidatePath(`/subjects/${subjectId}/manage/papers/${paperId}/submissions`);
 }
