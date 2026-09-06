@@ -15,6 +15,7 @@ Run **in order** in the Supabase SQL editor. Each is guarded for safe re-runs.
 | 009 | `009_match_schema_sync.sql` | Reconciles drift: adds `matches.is_general`, `matches.topic_ids`, `match_participants.status` (the deployed DB predates them, breaking every non-solo match) and re-asserts the match RLS. **Run this** — unblocks 1v1 duels as well as team quizzes. | run for duels + team quizzes |
 | 010 | `010_match_check_constraints.sql` | More 004 drift: re-adds the `matches.mode` / `matches.status` / `match_teams.slot` / `match_participants.status` CHECK constraints (deployed `mode` check lacks `'group'`). **Run this** after 009. | run for team quizzes |
 | 011 | `011_exams_and_papers.sql` | Exams & Papers workflow: `assessments` gains `format` / `kind` (exam\|revision) / `duration_minutes` / `instructions` / `published`; `assessment_sections` (choice rules); `assessment_item_keys` (hidden marking key); `assessment_items` gains `question_type` / `section_id` / `mcq_options` / `images` / `max_marks`; `assessment_attempts` (per-attempt state, replaces `assessment_submissions`); `close_expired_assessment_attempts()`; `assessment-media` storage bucket + policies. **Run this** after 010. | run for the exams workflow |
+| 012 | `012_paper_economy.sql` | `assessments.pass_pct` (reward pays only above this score, default 0.8); `token_transactions.reason` gains `assessment_entry` / `assessment_refund` (the attempt cost is now charged on start). **Run this** after 011. | run for paper cost/reward |
 
 After any change to `src/lib/subjects/**`:
 

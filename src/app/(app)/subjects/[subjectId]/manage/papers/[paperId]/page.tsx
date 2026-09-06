@@ -115,9 +115,22 @@ export default async function BuildPaperPage({
                 <option value="mixed">Mixed</option>
               </select>
             </div>
-            <div style={{ width: 160 }}>
+            <div style={{ width: 110 }}>
+              <label className="form-label-custom" htmlFor="s-cost">
+                Cost 🪙
+              </label>
+              <input
+                id="s-cost"
+                name="token_cost_to_attempt"
+                className="form-control-custom"
+                type="number"
+                min={0}
+                defaultValue={paper.token_cost_to_attempt}
+              />
+            </div>
+            <div style={{ width: 110 }}>
               <label className="form-label-custom" htmlFor="s-reward">
-                Reward (tokens)
+                Reward 🪙
               </label>
               <input
                 id="s-reward"
@@ -128,7 +141,24 @@ export default async function BuildPaperPage({
                 defaultValue={paper.token_reward_on_completion}
               />
             </div>
+            <div style={{ width: 100 }}>
+              <label className="form-label-custom" htmlFor="s-pass">
+                Pass %
+              </label>
+              <input
+                id="s-pass"
+                name="pass_pct"
+                className="form-control-custom"
+                type="number"
+                min={0}
+                max={100}
+                defaultValue={Math.round(paper.pass_pct * 100)}
+              />
+            </div>
           </div>
+          <p className="item-sub m-0">
+            The reward pays out only if the student reaches the pass mark; the entry cost is charged when they start.
+          </p>
           <div>
             <label className="form-label-custom" htmlFor="s-instr">
               Instructions to candidates

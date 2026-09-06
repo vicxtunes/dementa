@@ -168,12 +168,24 @@ export default async function ManageSubjectPage({
                 </label>
                 <input id="source" name="source" className="form-control-custom" placeholder="AITEL Joint Mocks 2025" />
               </div>
-              <div className="d-flex gap-3">
-                <div className="flex-grow-1">
+              <div className="d-flex gap-3 flex-wrap">
+                <div style={{ width: 120 }}>
+                  <label className="form-label-custom" htmlFor="p-cost">
+                    Cost 🪙
+                  </label>
+                  <input id="p-cost" name="token_cost_to_attempt" className="form-control-custom" type="number" defaultValue={0} min={0} />
+                </div>
+                <div style={{ width: 120 }}>
                   <label className="form-label-custom" htmlFor="reward">
-                    Completion reward (tokens)
+                    Reward 🪙
                   </label>
                   <input id="reward" name="token_reward_on_completion" className="form-control-custom" type="number" defaultValue={10} min={0} />
+                </div>
+                <div style={{ width: 110 }}>
+                  <label className="form-label-custom" htmlFor="p-pass">
+                    Pass %
+                  </label>
+                  <input id="p-pass" name="pass_pct" className="form-control-custom" type="number" defaultValue={80} min={0} max={100} />
                 </div>
                 <div className="flex-grow-1">
                   <label className="form-label-custom" htmlFor="p-scope">
@@ -185,6 +197,9 @@ export default async function ManageSubjectPage({
                   </select>
                 </div>
               </div>
+              <p className="item-sub m-0">
+                Reward pays out only if the student reaches the pass mark. The entry cost is charged when they start.
+              </p>
               <button type="submit" className="btn-custom btn-custom-primary align-self-start">
                 Create &amp; build
               </button>

@@ -68,7 +68,17 @@ export function StartCard({
             ? `${paper.duration_minutes}-minute timer`
             : "No time limit"}
         </li>
-        <li>Completion reward: +{paper.token_reward_on_completion} tokens</li>
+        {paper.token_cost_to_attempt > 0 && (
+          <li>
+            <strong>Costs {paper.token_cost_to_attempt} 🪙 to start</strong>
+          </li>
+        )}
+        <li>
+          Reward: <strong>+{paper.token_reward_on_completion} 🪙</strong>
+          {paper.token_reward_on_completion > 0
+            ? ` — only if you score ${Math.round(paper.pass_pct * 100)}% or more`
+            : ""}
+        </li>
       </ul>
 
       {paper.kind === "exam" && paper.duration_minutes && (

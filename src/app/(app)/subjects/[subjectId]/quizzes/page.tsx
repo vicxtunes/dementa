@@ -43,7 +43,7 @@ export default async function SubjectQuizzesPage({
       <div className="col-lg-5">
         <div className="card">
           <div className="card-header">
-            <h2 className="card-title">Challenge a classmate</h2>
+            <h2 className="card-title">Practice or challenge</h2>
           </div>
           <DuelCreate
             subjectId={subjectId}
@@ -60,7 +60,7 @@ export default async function SubjectQuizzesPage({
             <h2 className="card-title">Your quizzes</h2>
           </div>
           {mine.length === 0 ? (
-            <p className="item-sub m-0">No duels yet — challenge someone to get started.</p>
+            <p className="item-sub m-0">Nothing yet — practise solo or challenge a classmate.</p>
           ) : (
             <div className="transaction-list">
               {mine.map(({ m, parts }) => {

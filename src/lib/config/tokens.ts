@@ -25,6 +25,8 @@ export const TOKEN_RULES = {
     // still play. Staking tokens is opt-in.
     duelStakeDefault: 0,
     groupQuizStakePerMemberDefault: 0,
+    /** Winner's cut of a staked duel/group pot; the rest is the house rake. */
+    winnerPotShare: 0.8,
   },
 } as const;
 
@@ -42,6 +44,8 @@ export function quizPassed(score: number, total: number): boolean {
 export type TokenReason =
   | "topic_mastered"
   | "assessment_completed"
+  | "assessment_entry"
+  | "assessment_refund"
   | "streak_bonus"
   | "teacher_grant"
   | "duel_entry"
@@ -55,7 +59,9 @@ export type TokenReason =
 
 export const TOKEN_REASON_LABELS: Record<TokenReason, string> = {
   topic_mastered: "Topic mastered",
-  assessment_completed: "Exam / paper completed",
+  assessment_completed: "Exam / paper reward",
+  assessment_entry: "Exam / paper entry",
+  assessment_refund: "Exam / paper refund",
   streak_bonus: "Streak bonus",
   teacher_grant: "Teacher grant",
   duel_entry: "Duel stake",

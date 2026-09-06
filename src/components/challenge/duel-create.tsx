@@ -2,7 +2,8 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { TOKEN_RULES } from "@/lib/config/tokens";
+
+const CHALLENGE_STAKE = 5; // one-on-one: 5 🪙 each, winner keeps 80% of the pot
 
 export function DuelCreate({
   subjectId,
@@ -16,10 +17,10 @@ export function DuelCreate({
   tokenBalance?: number;
 }) {
   const router = useRouter();
+  const [mode, setMode] = useState<"solo" | "duel">("solo");
   const [opponent, setOpponent] = useState("");
   const [picked, setPicked] = useState<string[]>([]);
   const [count, setCount] = useState<number>(5);
-  const [stake, setStake] = useState<number>(TOKEN_RULES.spend.duelStakeDefault);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
@@ -29,52 +30,84 @@ export function DuelCreate({
 
   function create() {
     setError(null);
-    if (!opponent) return setError("Pick an opponent.");
-    if (stake > tokenBalance) {
-      return setError(`That stake is ${stake} 🪙 but you only have ${tokenBalance}. Lower it or set it to 0.`);
-    }
     if (picked.length === 0) return setError("Pick at least one topic.");
+    if (mode === "duel") {
+      if (!opponent) return setError("Pick an opponent.");
+      if (tokenBalance < CHALLENGE_STAKE) {
+        return setError(
+          `A one-on-one costs ${CHALLENGE_STAKE} 🪙 each and you have ${tokenBalance}. Earn some by mastering topics first.`
+        );
+      }
+    }
     startTransition(async () => {
       const res = await fetch("/api/matches", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
-          mode: "duel",
+          mode,
           subjectId,
           isGeneral: false,
           topicIds: picked,
           questionCount: count,
-          stake,
-          opponentIds: [opponent],
+          stake: mode === "duel" ? CHALLENGE_STAKE : 0,
+          opponentIds: mode === "duel" ? [opponent] : [],
         }),
       });
       const data = await res.json().catch(() => ({}) as { matchId?: string; error?: string });
       if (!res.ok || !data.matchId) {
-        return setError(data.error ?? "Could not create the duel.");
+        return setError(data.error ?? "Could not start the quiz.");
       }
       router.push(`/matches/${data.matchId}`);
     });
   }
 
-  if (classmates.length === 0) {
-    return <p className="item-sub m-0">No classmates to challenge yet.</p>;
-  }
-
   return (
     <div className="d-flex flex-column gap-3">
       <div>
-        <label className="form-label-custom" htmlFor="opp">
-          Opponent
-        </label>
-        <select id="opp" className="form-select-custom" value={opponent} onChange={(e) => setOpponent(e.target.value)}>
-          <option value="">Choose a classmate…</option>
-          {classmates.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.full_name ?? "Unnamed student"}
-            </option>
-          ))}
-        </select>
+        <span className="form-label-custom d-block">Mode</span>
+        <div className="d-flex gap-2">
+          <button
+            type="button"
+            onClick={() => setMode("solo")}
+            className={`btn-custom btn-custom-sm ${mode === "solo" ? "btn-custom-primary" : "btn-custom-light"}`}
+          >
+            Solo practice
+          </button>
+          <button
+            type="button"
+            onClick={() => setMode("duel")}
+            className={`btn-custom btn-custom-sm ${mode === "duel" ? "btn-custom-primary" : "btn-custom-light"}`}
+          >
+            One-on-one · {CHALLENGE_STAKE} 🪙
+          </button>
+        </div>
+        {mode === "duel" && (
+          <p className="item-sub mt-1 mb-0">
+            Both players stake {CHALLENGE_STAKE} 🪙. The winner takes 80% of the pot; a tie refunds both. You have{" "}
+            {tokenBalance} 🪙.
+          </p>
+        )}
       </div>
+
+      {mode === "duel" && (
+        <div>
+          <label className="form-label-custom" htmlFor="opp">
+            Opponent
+          </label>
+          {classmates.length === 0 ? (
+            <p className="item-sub m-0">No classmates to challenge yet.</p>
+          ) : (
+            <select id="opp" className="form-select-custom" value={opponent} onChange={(e) => setOpponent(e.target.value)}>
+              <option value="">Choose a classmate…</option>
+              {classmates.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.full_name ?? "Unnamed student"}
+                </option>
+              ))}
+            </select>
+          )}
+        </div>
+      )}
 
       <div>
         <span className="form-label-custom d-block">Topics</span>
@@ -97,42 +130,26 @@ export function DuelCreate({
         </div>
       </div>
 
-      <div className="d-flex gap-3">
-        <div>
-          <label className="form-label-custom" htmlFor="cnt">
-            Questions
-          </label>
-          <input
-            id="cnt"
-            type="number"
-            min={3}
-            max={20}
-            className="form-control-custom form-control-custom-sm"
-            value={count}
-            onChange={(e) => setCount(Number(e.target.value))}
-          />
-        </div>
-        <div>
-          <label className="form-label-custom" htmlFor="stk">
-            Stake (tokens each)
-          </label>
-          <input
-            id="stk"
-            type="number"
-            min={0}
-            max={tokenBalance}
-            className="form-control-custom form-control-custom-sm"
-            value={stake}
-            onChange={(e) => setStake(Number(e.target.value))}
-          />
-          <span className="item-sub">You have {tokenBalance} 🪙 · 0 = free</span>
-        </div>
+      <div>
+        <label className="form-label-custom" htmlFor="cnt">
+          Questions
+        </label>
+        <input
+          id="cnt"
+          type="number"
+          min={3}
+          max={20}
+          className="form-control-custom form-control-custom-sm"
+          style={{ width: 100 }}
+          value={count}
+          onChange={(e) => setCount(Number(e.target.value))}
+        />
       </div>
 
       {error && <div className="alert-custom alert-custom-danger d-block">{error}</div>}
 
       <button type="button" className="btn-custom btn-custom-primary align-self-start" disabled={pending} onClick={create}>
-        {pending ? "Creating…" : `Challenge${stake > 0 ? ` · stake ${stake} 🪙` : ""}`}
+        {pending ? "Starting…" : mode === "solo" ? "Start practice" : `Challenge · ${CHALLENGE_STAKE} 🪙`}
       </button>
     </div>
   );
