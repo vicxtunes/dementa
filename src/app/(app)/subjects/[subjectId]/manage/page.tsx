@@ -128,38 +128,65 @@ export default async function ManageSubjectPage({
                 </label>
                 <input id="p-title" name="title" className="form-control-custom" required placeholder="2024 Joint Mock — Paper 1" />
               </div>
+              <div className="d-flex gap-3">
+                <div className="flex-grow-1">
+                  <label className="form-label-custom" htmlFor="p-kind">
+                    Kind
+                  </label>
+                  <select id="p-kind" name="kind" className="form-select-custom" defaultValue="revision">
+                    <option value="revision">Revision paper (untimed, retakes)</option>
+                    <option value="exam">Exam (strict timer, one attempt)</option>
+                  </select>
+                </div>
+                <div style={{ width: 120 }}>
+                  <label className="form-label-custom" htmlFor="p-dur">
+                    Minutes
+                  </label>
+                  <input id="p-dur" name="duration_minutes" className="form-control-custom" type="number" min={1} placeholder="120" />
+                </div>
+              </div>
               <div>
-                <label className="form-label-custom" htmlFor="assessment_type">
-                  Type
+                <label className="form-label-custom" htmlFor="p-format">
+                  Format
                 </label>
-                <select id="assessment_type" name="assessment_type" className="form-select-custom" defaultValue="past_paper">
-                  <option value="past_paper">Past paper</option>
-                  <option value="timed_exam">Timed exam</option>
+                <select id="p-format" name="format" className="form-select-custom" defaultValue="structured">
+                  <option value="structured">Structured questions</option>
+                  <option value="mcq">Multiple choice</option>
+                  <option value="short_answer">Short answer</option>
+                  <option value="mixed">Mixed</option>
                 </select>
+              </div>
+              <div>
+                <label className="form-label-custom" htmlFor="p-instructions">
+                  Instructions to candidates (optional)
+                </label>
+                <textarea id="p-instructions" name="instructions" className="form-control-custom" rows={3} placeholder="Answer all items in Section A…" />
               </div>
               <div>
                 <label className="form-label-custom" htmlFor="source">
                   Source (optional)
                 </label>
-                <input id="source" name="source" className="form-control-custom" placeholder="UNEB 2023" />
+                <input id="source" name="source" className="form-control-custom" placeholder="AITEL Joint Mocks 2025" />
               </div>
-              <div>
-                <label className="form-label-custom" htmlFor="reward">
-                  Completion reward (tokens)
-                </label>
-                <input id="reward" name="token_reward_on_completion" className="form-control-custom" type="number" defaultValue={10} min={0} />
-              </div>
-              <div>
-                <label className="form-label-custom" htmlFor="p-scope">
-                  Visible to
-                </label>
-                <select id="p-scope" name="scope" className="form-select-custom" defaultValue="all">
-                  <option value="all">Everyone in the subject</option>
-                  <option value="my-class">Only my class</option>
-                </select>
+              <div className="d-flex gap-3">
+                <div className="flex-grow-1">
+                  <label className="form-label-custom" htmlFor="reward">
+                    Completion reward (tokens)
+                  </label>
+                  <input id="reward" name="token_reward_on_completion" className="form-control-custom" type="number" defaultValue={10} min={0} />
+                </div>
+                <div className="flex-grow-1">
+                  <label className="form-label-custom" htmlFor="p-scope">
+                    Visible to
+                  </label>
+                  <select id="p-scope" name="scope" className="form-select-custom" defaultValue="all">
+                    <option value="all">Everyone in the subject</option>
+                    <option value="my-class">Only my class</option>
+                  </select>
+                </div>
               </div>
               <button type="submit" className="btn-custom btn-custom-primary align-self-start">
-                Create &amp; add questions
+                Create &amp; build
               </button>
             </form>
           </div>
@@ -180,9 +207,13 @@ export default async function ManageSubjectPage({
                       <i className="bi bi-file-earmark-text" />
                     </div>
                     <div className="transaction-info">
-                      <div className="transaction-name">{p.title}</div>
+                      <div className="transaction-name">
+                        {p.title}
+                        {!p.published && <span className="badge-table pending ms-2">Draft</span>}
+                      </div>
                       <div className="transaction-date">
-                        {p.assessment_type === "past_paper" ? "Past paper" : "Timed exam"} ·{" "}
+                        {p.kind === "exam" ? "Exam" : "Revision paper"}
+                        {p.duration_minutes ? ` · ${p.duration_minutes} min` : ""} ·{" "}
                         {p.class_code ? `Class ${p.class_code}` : "All classes"}
                       </div>
                     </div>
