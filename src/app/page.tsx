@@ -1,5 +1,10 @@
 import { redirect } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
 
-export default function Home() {
-  redirect("/quick-solution/v1");
+export default async function Index() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  redirect(user ? "/home" : "/login");
 }

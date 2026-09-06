@@ -1,13 +1,18 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 
-// Only the quick-solution (chemistry revision) feature has auth — the chat
-// app is unauthenticated mock data for now, so it's left alone here.
+// The authed hub: home, challenges, and the teacher class view. The chat app is
+// still unauthenticated mock data, so it is left out here for now.
 const PROTECTED_PREFIXES = [
-  "/quick-solution/v1/dashboard",
-  "/quick-solution/v1/day",
-  "/quick-solution/v1/quiz",
-  "/quick-solution/v1/teacher",
+  "/home",
+  "/subjects",
+  "/wallet",
+  "/classes",
+  "/matches",
+  "/quizzes",
+  "/challenges",
+  "/teams",
+  "/team-quizzes",
 ];
 
 export async function proxy(request: NextRequest) {
@@ -42,7 +47,7 @@ export async function proxy(request: NextRequest) {
 
   if (!user && isProtected) {
     const url = request.nextUrl.clone();
-    url.pathname = "/quick-solution/v1/login";
+    url.pathname = "/login";
     return NextResponse.redirect(url);
   }
 
@@ -50,5 +55,15 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/quick-solution/v1/:path*"],
+  matcher: [
+    "/home/:path*",
+    "/subjects/:path*",
+    "/wallet/:path*",
+    "/classes/:path*",
+    "/matches/:path*",
+    "/quizzes/:path*",
+    "/challenges/:path*",
+    "/teams/:path*",
+    "/team-quizzes/:path*",
+  ],
 };
