@@ -9,9 +9,9 @@ export function IconRail() {
   const [active, setActive] = useState<string>("chats");
 
   return (
-    <nav className="hidden w-[72px] shrink-0 flex-col items-center border-r border-zinc-200 bg-zinc-50 py-4 md:flex dark:border-zinc-800 dark:bg-zinc-950">
-      <div className="mb-6 flex h-9 w-9 items-center justify-center rounded-xl bg-sky-600 text-sm font-bold text-white">
-        D
+    <nav className="hidden w-[72px] shrink-0 flex-col items-center bg-[#051C12] py-4 md:flex">
+      <div className="mb-6 flex h-9 w-9 items-center justify-center rounded-[10px] bg-[#1A3E30] text-lg font-bold text-lime">
+        <i className="bi bi-asterisk" />
       </div>
 
       <ul className="flex flex-1 flex-col items-center gap-2">
@@ -23,10 +23,10 @@ export function IconRail() {
               title={label}
               aria-label={label}
               aria-current={active === id}
-              className={`flex h-11 w-11 items-center justify-center rounded-xl transition-colors ${
+              className={`flex h-11 w-11 items-center justify-center rounded-[10px] transition-colors ${
                 active === id
-                  ? "bg-sky-100 text-sky-600 dark:bg-sky-500/15 dark:text-sky-400"
-                  : "text-zinc-500 hover:bg-zinc-200/60 hover:text-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-900 dark:hover:text-zinc-200"
+                  ? "bg-white/10 text-lime"
+                  : "text-[#879A91] hover:bg-white/5 hover:text-white"
               }`}
             >
               <Icon className="h-5 w-5" />
@@ -39,7 +39,7 @@ export function IconRail() {
         type="button"
         title="Settings"
         aria-label="Settings"
-        className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl text-zinc-500 transition-colors hover:bg-zinc-200/60 hover:text-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-900 dark:hover:text-zinc-200"
+        className="mb-4 flex h-11 w-11 items-center justify-center rounded-[10px] text-[#879A91] transition-colors hover:bg-white/5 hover:text-white"
       >
         <SettingsIcon className="h-5 w-5" />
       </button>

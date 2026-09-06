@@ -1,13 +1,12 @@
 const PALETTE = [
-  "bg-rose-500",
-  "bg-orange-500",
-  "bg-amber-500",
-  "bg-emerald-500",
-  "bg-teal-500",
-  "bg-sky-500",
-  "bg-indigo-500",
-  "bg-violet-500",
-  "bg-fuchsia-500",
+  "bg-[#072F1F]",
+  "bg-[#1A3E30]",
+  "bg-[#2F6F4F]",
+  "bg-[#3F7D5A]",
+  "bg-[#5B7F5B]",
+  "bg-[#6C7E75]",
+  "bg-[#4C6B52]",
+  "bg-[#2C5F4C]",
 ];
 
 function colorFor(name: string) {
@@ -38,7 +37,7 @@ export function Avatar({
   return (
     <span className="relative inline-flex shrink-0">
       <span
-        className={`flex items-center justify-center rounded-full font-medium text-white ${colorFor(
+        className={`flex items-center justify-center rounded-[12px] font-bold text-white ${colorFor(
           name
         )} ${dims}`}
       >
@@ -46,7 +45,7 @@ export function Avatar({
       </span>
       {online && (
         <span
-          className={`absolute right-0 bottom-0 ${dot} rounded-full bg-emerald-500 ring-2 ring-white dark:ring-zinc-950`}
+          className={`absolute right-0 bottom-0 ${dot} rounded-full bg-sys-green ring-2 ring-white`}
         />
       )}
     </span>

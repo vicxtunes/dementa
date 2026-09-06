@@ -9,23 +9,24 @@ export function ChatHeader({
   conversation: Conversation;
   onBack: () => void;
 }) {
+  const iconBtn =
+    "flex h-9 w-9 items-center justify-center rounded-[10px] text-muted hover:bg-canvas hover:text-forest";
+
   return (
-    <header className="flex h-16 shrink-0 items-center justify-between border-b border-zinc-200 bg-white px-2 sm:px-4 dark:border-zinc-800 dark:bg-zinc-950">
+    <header className="flex h-16 shrink-0 items-center justify-between border-b border-[#e9efef] bg-white px-2 sm:px-4">
       <div className="flex min-w-0 items-center gap-2 sm:gap-3">
         <button
           type="button"
           onClick={onBack}
           aria-label="Back to conversations"
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-zinc-500 hover:bg-zinc-100 md:hidden dark:text-zinc-400 dark:hover:bg-zinc-900"
+          className={`${iconBtn} shrink-0 md:hidden`}
         >
           <BackIcon className="h-5 w-5" />
         </button>
         <Avatar name={conversation.name} online={conversation.online} />
         <div className="min-w-0">
-          <p className="truncate text-sm font-semibold text-zinc-900 dark:text-zinc-50">
-            {conversation.name}
-          </p>
-          <p className="text-xs text-zinc-500 dark:text-zinc-400">
+          <p className="truncate text-sm font-bold text-ink">{conversation.name}</p>
+          <p className="text-xs text-muted">
             {conversation.isGroup
               ? `${conversation.members?.length ?? 0} members`
               : conversation.online
@@ -36,32 +37,16 @@ export function ChatHeader({
       </div>
 
       <div className="flex shrink-0 items-center gap-1">
-        <button
-          type="button"
-          aria-label="Search in conversation"
-          className="hidden h-9 w-9 items-center justify-center rounded-lg text-zinc-500 hover:bg-zinc-100 sm:flex dark:text-zinc-400 dark:hover:bg-zinc-900"
-        >
+        <button type="button" aria-label="Search in conversation" className={`${iconBtn} hidden sm:flex`}>
           <SearchIcon className="h-4.5 w-4.5" />
         </button>
-        <button
-          type="button"
-          aria-label="Voice call"
-          className="flex h-9 w-9 items-center justify-center rounded-lg text-zinc-500 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-900"
-        >
+        <button type="button" aria-label="Voice call" className={iconBtn}>
           <CallIcon className="h-4.5 w-4.5" />
         </button>
-        <button
-          type="button"
-          aria-label="Video call"
-          className="flex h-9 w-9 items-center justify-center rounded-lg text-zinc-500 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-900"
-        >
+        <button type="button" aria-label="Video call" className={iconBtn}>
           <VideoIcon className="h-4.5 w-4.5" />
         </button>
-        <button
-          type="button"
-          aria-label="More options"
-          className="flex h-9 w-9 items-center justify-center rounded-lg text-zinc-500 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-900"
-        >
+        <button type="button" aria-label="More options" className={iconBtn}>
           <MoreIcon className="h-4.5 w-4.5" />
         </button>
       </div>

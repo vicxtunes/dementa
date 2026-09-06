@@ -15,7 +15,7 @@ export function MobileNavDrawer() {
         type="button"
         onClick={() => setOpen(true)}
         aria-label="Open menu"
-        className="flex h-9 w-9 items-center justify-center rounded-lg text-zinc-500 hover:bg-zinc-100 md:hidden dark:text-zinc-400 dark:hover:bg-zinc-900"
+        className="flex h-9 w-9 items-center justify-center rounded-[10px] text-muted hover:bg-canvas md:hidden"
       >
         <MenuIcon className="h-5 w-5" />
       </button>
@@ -26,23 +26,21 @@ export function MobileNavDrawer() {
             type="button"
             aria-label="Close menu"
             onClick={() => setOpen(false)}
-            className="absolute inset-0 bg-black/30"
+            className="absolute inset-0 bg-forest-dark/40 backdrop-blur-sm"
           />
-          <div className="absolute inset-y-0 left-0 flex w-64 flex-col bg-white py-4 shadow-xl dark:bg-zinc-950">
+          <div className="absolute inset-y-0 left-0 flex w-64 flex-col bg-white py-4 shadow-xl">
             <div className="flex items-center justify-between px-4 pb-4">
               <div className="flex items-center gap-2">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-sky-600 text-sm font-bold text-white">
-                  D
+                <div className="flex h-9 w-9 items-center justify-center rounded-[10px] bg-[#1A3E30] text-lg font-bold text-lime">
+                  <i className="bi bi-asterisk" />
                 </div>
-                <span className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
-                  Dementa Chat
-                </span>
+                <span className="text-sm font-bold text-ink">Dementa</span>
               </div>
               <button
                 type="button"
                 onClick={() => setOpen(false)}
                 aria-label="Close menu"
-                className="flex h-8 w-8 items-center justify-center rounded-lg text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900"
+                className="flex h-8 w-8 items-center justify-center rounded-[10px] text-muted hover:bg-canvas"
               >
                 <CloseIcon className="h-4.5 w-4.5" />
               </button>
@@ -57,10 +55,8 @@ export function MobileNavDrawer() {
                       setActive(id);
                       setOpen(false);
                     }}
-                    className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
-                      active === id
-                        ? "bg-sky-50 text-sky-600 dark:bg-sky-500/15 dark:text-sky-400"
-                        : "text-zinc-600 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-900"
+                    className={`flex w-full items-center gap-3 rounded-[10px] px-3 py-2.5 text-sm font-bold transition-colors ${
+                      active === id ? "bg-[#eef4f1] text-forest" : "text-muted hover:bg-canvas"
                     }`}
                   >
                     <Icon className="h-5 w-5" />
@@ -70,15 +66,15 @@ export function MobileNavDrawer() {
               ))}
             </ul>
 
-            <div className="flex items-center justify-between border-t border-zinc-100 px-4 pt-4 dark:border-zinc-900">
+            <div className="flex items-center justify-between border-t border-[#e9efef] px-4 pt-4">
               <div className="flex items-center gap-2">
                 <Avatar name="You" online />
-                <span className="text-sm text-zinc-700 dark:text-zinc-200">You</span>
+                <span className="text-sm text-ink">You</span>
               </div>
               <button
                 type="button"
                 aria-label="Settings"
-                className="flex h-9 w-9 items-center justify-center rounded-lg text-zinc-500 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-900"
+                className="flex h-9 w-9 items-center justify-center rounded-[10px] text-muted hover:bg-canvas"
               >
                 <SettingsIcon className="h-5 w-5" />
               </button>

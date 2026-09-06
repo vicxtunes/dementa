@@ -67,13 +67,11 @@ export function ChatApp() {
             <Composer onSend={handleSend} />
           </>
         ) : (
-          <div className="flex flex-1 flex-col items-center justify-center gap-3 bg-zinc-50 px-6 text-center dark:bg-black/40">
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-sky-50 text-sky-500 dark:bg-sky-500/10">
+          <div className="flex flex-1 flex-col items-center justify-center gap-3 bg-canvas px-6 text-center">
+            <div className="flex h-14 w-14 items-center justify-center rounded-[16px] bg-[#eef4f1] text-forest">
               <ChatIcon className="h-7 w-7" />
             </div>
-            <p className="text-sm text-zinc-500 dark:text-zinc-400">
-              Pick a conversation from the left to start chatting.
-            </p>
+            <p className="text-sm text-muted">Pick a conversation from the left to start chatting.</p>
           </div>
         )}
       </div>
